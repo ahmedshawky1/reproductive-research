@@ -1,0 +1,51 @@
+
+# Course Project1
+## Load the data
+```{r,echo=TRUE}
+setwd("E:/R")
+library(ggplot2)
+library(dplyr)
+data <- read.csv("activity.csv")
+data2 <- data
+```    
+
+## What is mean total number of steps taken per day?
+```{r,echo=TRUE}
+newdata <- data[!is.na(data$steps),]
+totalsteps <- summarize(group_by(newdata,date),total=sum(steps))
+hist(totalsteps$total,breaks = 20,col="blue",xlab="totalsteps",main="Total Steps")
+mean(totalsteps$total)
+median(totalsteps$total)
+```   
+
+## What is the average daily activity pattern?
+```{r,echo=TRUE}
+meanstep <- summarize(group_by(newdata,interval),mean=mean(steps))
+with(meanstep,plot(interval,mean,type="l",col="pink",lwd=2,xlab="5m Interval",ylab="Average Steps",main="Average Daily Activity Pattern"))
+meanstep[meanstep$mean==max(meanstep$mean),]
+```   
+
+## Imputing missing values
+```{r,echo=TRUE}
+sum(!complete.cases(data))
+data2[is.na(data2$steps),"steps"] <- meanstep$mean
+totalsteps2 <- summarize(group_by(data2,date),total=sum(steps))
+hist(totalsteps2$total,breaks = 20,col="purple",xlab="totalsteps",main="Total Steps(filled-in missing value)")
+```   
+
+## Are there differences in activity patterns between weekdays and weekends?
+```{r,echo=TRUE}
+data2$date <- as.character(data2$date)
+data2$date <- as.Date(data2$date,"%Y-%m-%d")
+isweekend <- function(d){
+  wd <- weekdays(d)
+  ifelse (wd=="ÐÇÆÚÁù"|wd=="ÐÇÆÚÈÕ","weekend","weekday")
+}
+w<- sapply(data2$date,isweekend)
+data2$weekdays <- as.factor(w)
+head(data2)
+data2mean <- aggregate(steps ~ weekdays+interval, data=data2, FUN=mean)
+ggplot(data2mean,aes(interval,steps))+geom_line(color="yellow",lwd=1)+facet_grid(.~weekdays)+labs(x="5m Interval",y="Average Steps",title=" activity patterns between weekdays and weekends")
+```   
+
+# Completed
